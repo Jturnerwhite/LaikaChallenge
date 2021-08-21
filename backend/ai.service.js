@@ -29,9 +29,13 @@ class AiService {
         let scoreCalc = Number.MAX_VALUE;
         let emptyTiles = this.getEmpty(tiles);
 
-        let next = emptyTiles.map(() => {
-            
+        let next = emptyTiles.map((pos) => {
+            // what does it look like if this action was taken?
         });
+    }
+
+    predictTurn = (tiles, index) => {
+        
     }
 }
 

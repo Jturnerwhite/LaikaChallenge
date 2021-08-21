@@ -103,7 +103,7 @@ class GameService {
         console.log(gameState);
 
         // just having some fun here
-        let behavior = 2;//Math.floor(Math.random() * 3);
+        let behavior = Math.floor(Math.random() * 3);
 
         switch(behavior) {
             case 0:
