@@ -1,11 +1,19 @@
-import React from 'react';
+import React, {Component} from 'react';
 import ReactDOM from 'react-dom';
-import './index.css';
-import App from './App';
 
-ReactDOM.render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>,
-  document.getElementById('root')
-);
+import LandingPage from './pages/landing.page';
+import './index.css';
+
+class App extends Component {
+  render() {
+    return (
+      <div className="App">
+        <header className="App-header">
+          <LandingPage/>
+        </header>
+      </div>
+    );
+  }
+}
+
+ReactDOM.render(<App />, document.getElementById('root'))
