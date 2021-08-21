@@ -4,6 +4,7 @@ import TicTacToe from '../components/tic-tac-toe/tic-tac-toe.game';
 
 class GamePage extends Component {
     state = {
+        turn: "X",
         tiles: []
     }
 
@@ -12,6 +13,7 @@ class GamePage extends Component {
 
         if(!this.state || this.state.tiles.length === 0) {
             this.state = {
+                turn: 0,
                 tiles: []
             };
 
@@ -21,11 +23,25 @@ class GamePage extends Component {
         }
     }
 
+    updateTile = (indexToUpdate) => {
+        const {turn, tiles} = this.state;
+
+        this.setState({
+            turn: (turn === "X") ? "O" : "X",
+            tiles: tiles.map((currentValue, index) => {
+                return (index === indexToUpdate) ? this.turn : currentValue;
+            })
+        })
+    }
+
     render() {
+        const {tiles} = this.state;
+        console.log("Page Render", tiles);
+
         return (
             <div className="game-page">
                 <h1>Game Page</h1>
-                <TicTacToe tiles={this.state.tiles}/>
+                <TicTacToe tiles={tiles} update={this.updateTile}/>
             </div>
         );
     }
