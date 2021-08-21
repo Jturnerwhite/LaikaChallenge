@@ -5,38 +5,51 @@ import TicTacToe from '../components/tic-tac-toe/tic-tac-toe.game';
 class GamePage extends Component {
     state = {
         turn: "X",
-        tiles: []
+        tiles: [
+            [],
+            [],
+            []
+        ]
     }
 
     constructor(props) {
         super(props);
 
-        if(!this.state || this.state.tiles.length === 0) {
-            this.state = {
-                turn: 0,
-                tiles: []
-            };
+        this.state = {
+            turn: "X",
+            tiles: [
+                ["", "", ""],
+                ["", "", ""],
+                ["", "", ""],
+            ]
+        };
+    }
 
-            for(var i = 0; i < 9; i++) {
-                this.state.tiles.push("");
-            }
+    updateTile = (yIndex, xIndex) => {
+        const {turn, tiles} = this.state;
+
+        if(tiles[yIndex][xIndex] !== "") {
+            alert("That space is taken"); // ugly but temporary
+        }
+        else {
+            const updatedTiles = Array.from(tiles);
+            updatedTiles[yIndex][xIndex] = turn;
+
+            this.setState({
+                turn: (turn === "X") ? "O" : "X",
+                tiles: updatedTiles
+            });
+
+            this.assessState();
         }
     }
 
-    updateTile = (indexToUpdate) => {
+    assessState = () => {
         const {turn, tiles} = this.state;
-
-        this.setState({
-            turn: (turn === "X") ? "O" : "X",
-            tiles: tiles.map((currentValue, index) => {
-                return (index === indexToUpdate) ? this.turn : currentValue;
-            })
-        })
     }
 
     render() {
         const {tiles} = this.state;
-        console.log("Page Render", tiles);
 
         return (
             <div className="game-page">
