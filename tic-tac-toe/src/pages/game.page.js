@@ -1,12 +1,15 @@
 import React, {Component} from 'react';
 import { Redirect } from "react-router-dom";
 
+import ApiService from '../services/api.service';
 import TicTacToe from '../components/tic-tac-toe/tic-tac-toe.game';
 
 class GamePage extends Component {
+    apiService = null;
     winValue = 3; // allows us to reuse game as "connect four" someday (?)
 
     state = {
+        id: "",
         outcome: null,
         turn: "X",
         tiles: [
@@ -20,6 +23,7 @@ class GamePage extends Component {
         super(props);
 
         this.state = {
+            id: "",
             outcome: null,
             turn: "X",
             tiles: [
@@ -28,6 +32,25 @@ class GamePage extends Component {
                 ["", "", ""],
             ]
         };
+        this.apiService = new ApiService();
+    }
+
+    componentDidMount() {
+        let { id } = this.state;
+        if(id === "") {
+            id = this.apiService.getGameId()
+        }
+
+        this.apiService
+            .getGame(id)
+            .then((result) => {
+                this.setState({
+                    id: result.id,
+                    outcome: result.outcome,
+                    turn: result.turn,
+                    tiles: result.tiles
+                })
+            });
     }
 
     updateTile = (yIndex, xIndex) => {
@@ -51,79 +74,9 @@ class GamePage extends Component {
 
     // hashing this out on the frontend, will relocate to backend after finishing
     assessState = () => {
-        const {tiles} = this.state;
-        const winValue = this.winValue;
+        const {id, turn, tiles} = this.state;
 
-        let winnerFound = false;
-        let totalFilled = 0;
-        let downRightDiagValue = 0;
-        for(var y = 0; y < tiles.length; y++) {
-            let totalRowValue = 0;
-            let totalColValue = 0;
-
-            for(var x = 0; x < tiles[y].length; x++) {
-                if(tiles[y][x] === "X") {
-                    totalFilled++;
-                    totalRowValue++;
-                }
-                else if(tiles[y][x] === "O") {
-                    totalFilled++;
-                    totalRowValue--;
-                }
-
-                // Unintuitively, this can simultaneously check for column wins.
-                if(tiles[x][y] === "X") {
-                    totalColValue++;
-                }
-                else if(tiles[x][y] === "O") {
-                    totalColValue--;
-                }
-
-                if(x === y) {
-                    if(tiles[x][y] === "X") {
-                        downRightDiagValue++;
-                    }
-                    else if(tiles[x][y] === "O") {
-                        downRightDiagValue--;
-                    }
-                }
-            }
-
-            if(totalRowValue === winValue || totalColValue === winValue) {
-                winnerFound = true;
-                this.renderAlert("X won");
-            }
-            else if(totalRowValue === -winValue || totalColValue === -winValue) {
-                winnerFound = true;
-                this.renderAlert("O won");
-            }
-        }
-
-        if(downRightDiagValue === winValue || downRightDiagValue === winValue) {
-            winnerFound = true;
-            this.renderAlert("X won");
-        }
-        else if(downRightDiagValue === -winValue || downRightDiagValue === -winValue) {
-            winnerFound = true;
-            this.renderAlert("O won");
-        }
-
-        // wanted to move on from this, couldn't think of rapid+easy+clever check so heres the 'hard coded'
-        if(tiles[0][2] === tiles[1][1] && tiles[1][1] === tiles[2][0] && tiles[1][1] === "X") {
-            winnerFound = true;
-            this.renderAlert("X won");
-        }
-        if(tiles[0][2] === tiles[1][1] && tiles[1][1] === tiles[2][0] && tiles[1][1] === "O") {
-            winnerFound = true;
-            this.renderAlert("O won");
-        }
-
-        if(!winnerFound && totalFilled === (tiles.length * tiles[0].length)) {
-            winnerFound = true;
-            this.renderAlert('TIE');
-        }
-
-        this.setState({ ...this.state, outcome: "X" });
+        this.apiService.updateGame(id, turn, tiles);
     }
 
     renderAlert = (message) => {
@@ -132,7 +85,8 @@ class GamePage extends Component {
 
     render() {
         const {outcome, tiles} = this.state;
-        console.log(outcome);
+
+        console.log(tiles);
 
         if(outcome !== null) {
             let redirect = "/end?outcome="+outcome;
