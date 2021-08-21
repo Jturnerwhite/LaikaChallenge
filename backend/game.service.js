@@ -102,17 +102,19 @@ class GameService {
         console.log("Current state:")
         console.log(gameState);
 
-        let behavior = Math.floor(Math.random() * 3);
-
         // just having some fun here
+        let behavior = 2;//Math.floor(Math.random() * 3);
+
         switch(behavior) {
             case 0:
+                gameState = this.earliestOpeningBehavior(gameState);
+                break;
             case 1:
                 gameState = this.randomBehavior(gameState);
                 break;
             case 2:
             default:
-                gameState = this.earliestOpeningBehavior(gameState);
+                gameState = this.randomBehavior(gameState);
                 break;
         }
 
@@ -163,6 +165,10 @@ class GameService {
         }
 
         return newGameState;
+    }
+
+    playToWin = (newGameState) => {
+        // In progress elsewhere
     }
 }
 
