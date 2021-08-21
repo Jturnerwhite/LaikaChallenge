@@ -1,4 +1,5 @@
 import React, {Component} from 'react';
+import { Redirect } from "react-router-dom";
 
 import TicTacToe from '../components/tic-tac-toe/tic-tac-toe.game';
 
@@ -6,6 +7,7 @@ class GamePage extends Component {
     winValue = 3; // allows us to reuse game as "connect four" someday (?)
 
     state = {
+        outcome: null,
         turn: "X",
         tiles: [
             [],
@@ -18,6 +20,7 @@ class GamePage extends Component {
         super(props);
 
         this.state = {
+            outcome: null,
             turn: "X",
             tiles: [
                 ["", "", ""],
@@ -105,7 +108,7 @@ class GamePage extends Component {
             this.renderAlert("O won");
         }
 
-        // wanted to move on from this, couldn't think of rapid+easy+clever check for this
+        // wanted to move on from this, couldn't think of rapid+easy+clever check so heres the 'hard coded'
         if(tiles[0][2] === tiles[1][1] && tiles[1][1] === tiles[2][0] && tiles[1][1] === "X") {
             winnerFound = true;
             this.renderAlert("X won");
@@ -116,8 +119,11 @@ class GamePage extends Component {
         }
 
         if(!winnerFound && totalFilled === (tiles.length * tiles[0].length)) {
+            winnerFound = true;
             this.renderAlert('TIE');
         }
+
+        this.setState({ ...this.state, outcome: "X" });
     }
 
     renderAlert = (message) => {
@@ -125,7 +131,13 @@ class GamePage extends Component {
     }
 
     render() {
-        const {tiles} = this.state;
+        const {outcome, tiles} = this.state;
+        console.log(outcome);
+
+        if(outcome !== null) {
+            let redirect = "/end?outcome="+outcome;
+            return (<Redirect to={redirect}/>);
+        }
 
         return (
             <div className="game-page">

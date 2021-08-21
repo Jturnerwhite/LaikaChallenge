@@ -4,9 +4,9 @@ import { Link } from "react-router-dom";
 class LandingPage extends Component {
     render() {
         return (
-            <div class="landing-page">
+            <div className="landing-page">
                 <h1>Tic-Tac-Toe</h1>
-                <Link class="start-btn" to="/game">Start</Link>
+                <Link className="start-btn" to="/game">Start</Link>
             </div>
         );
     }

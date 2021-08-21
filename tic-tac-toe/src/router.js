@@ -11,7 +11,7 @@ class AppRouter extends Component {
 			<Router>
 				<Switch>
 					<Route path="/end">
-						<GamePage/>
+						<EndPage/>
 					</Route>
 					<Route path="/game">
 						<GamePage/>
