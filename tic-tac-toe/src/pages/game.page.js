@@ -22,6 +22,7 @@ class GamePage extends Component {
     constructor(props) {
         super(props);
 
+        // technically set by backend but good to have default structure defined at least
         this.state = {
             id: "",
             outcome: null,
@@ -37,9 +38,10 @@ class GamePage extends Component {
 
     componentDidMount() {
         let { id } = this.state;
-        if(id === "") {
-            id = this.apiService.getGameId()
-        }
+        // uncomment if you want to keep gamestate when the page is refreshed
+        // if(id === "") {
+        //     id = this.apiService.getGameId()
+        // }
 
         this.apiService
             .getGame(id)
@@ -54,7 +56,7 @@ class GamePage extends Component {
     }
 
     updateTile = (yIndex, xIndex) => {
-        const {turn, tiles} = this.state;
+        const {id, turn, tiles} = this.state;
 
         if(tiles[yIndex][xIndex] !== "") {
             this.renderAlert("That space is taken"); // ugly but temporary
@@ -63,20 +65,20 @@ class GamePage extends Component {
             const updatedTiles = Array.from(tiles);
             updatedTiles[yIndex][xIndex] = turn;
 
-            this.setState({
-                turn: (turn === "X") ? "O" : "X",
-                tiles: updatedTiles
+            this.apiService
+            .updateGame(id, turn, updatedTiles)
+            .then((result) => {
+                this.setState({
+                    id: this.state.id,
+                    outcome: result.outcome,
+                    turn: result.turn,
+                    tiles: result.tiles
+                });
+                if(result.outcome) {
+                    this.renderAlert(result.outcome);
+                }
             });
-
-            this.assessState();
         }
-    }
-
-    // hashing this out on the frontend, will relocate to backend after finishing
-    assessState = () => {
-        const {id, turn, tiles} = this.state;
-
-        this.apiService.updateGame(id, turn, tiles);
     }
 
     renderAlert = (message) => {

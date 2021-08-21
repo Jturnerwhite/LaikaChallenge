@@ -29,14 +29,15 @@ app.post('/game/:id', (req, res) => {
         res.sendStatus(404);
     }
 
-    game = updateGame(req.body);
-    if(game.outcome !== "X" && game.outcome !== "O" && game.outcome !== "Tie") {
-        game = executeAIturn(game);
+    let newGameState = updateGame(req.body);
+    if(newGameState.outcome !== "X" && newGameState.outcome !== "O" && newGameState.outcome !== "Tie") {
+        newGameState = executeAIturn(newGameState);
     }
 
-    cachedGameStates[req.params.id] = game;
+    cachedGameStates[req.params.id] = newGameState;
 
-    res.send(JSON.stringify(game));
+    console.log("Returning new state...");
+    res.end(JSON.stringify(newGameState));
 });
 
 app.listen(9000, () => console.log('Backend running on localhost:9000'));
@@ -54,7 +55,7 @@ function createNewGame() {
     }
 }
 
-function validate() {
+function validateGameState(gameState) {
     // From here on, theres a host of things we -could- worry about such as validation of state, making sure the same user doesn't go twice, etc.
     // However, for brevity we're going to assume no one is trying to cheat here...
     return true;
@@ -137,40 +138,68 @@ function updateGame(newGameState) {
 function executeAIturn(gameState) {
     // At this stage the turn has already been swapped over
     console.log(gameState.turn + ": AI Turn...");
-    let behavior = 0;//Math.floor(Math.random() * max);
+    console.log("Current state:")
+    console.log(gameState);
 
+    let behavior = Math.floor(Math.random() * 3);
+
+    // just having some fun here
     switch(behavior) {
         case 0:
+        case 1:
             gameState = randomBehavior(gameState);
             break;
-        case 1:
-            break;
         case 2:
+        default:
+            gameState = earliestOpeningBehavior(gameState);
             break;
     }
 
-    return gameState;
+    console.log("Turn taken, new state:")
+    console.log(gameState);
+    return updateGame(gameState);
 }
 
-function earliestOpeningBehavior() {
+function earliestOpeningBehavior(newGameState) {
+    let {tiles} = newGameState;
+    let turnTaken = false;
 
-}
-function earliestOpeningBehavior() {
+    for(var y = 0; y < tiles.length; y++) {
+        for(var x = 0; x < tiles[y].length; x++) {
+            if(!turnTaken && tiles[y][x] === "") {
+                tiles[y][x] = newGameState.turn;
+                turnTaken = true;
+                break;
+            }
+        }
 
+        if(turnTaken) {
+            break;
+        }
+    }
+
+    return newGameState;
 }
+
 function randomBehavior(newGameState) {
     let turnTaken = false;
     let {tiles} = newGameState;
+    let tries = 0;
 
     do
     {
+        tries++;
         let y = Math.floor(Math.random() * 3);
         let x = Math.floor(Math.random() * 3);
-        if(tiles[y][x] != "") {
+        if(tiles[y][x] === "") {
             tiles[y][x] = newGameState.turn;
+            turnTaken = true;
         }
-        turnTaken = true;
-    } while(!turnTaken);
+    } while(tries < 10 && !turnTaken);
+    
+    if(!turnTaken) {
+        return earliestOpeningBehavior(newGameState);
+    }
 
     return newGameState;
 }
