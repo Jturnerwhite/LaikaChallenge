@@ -8,6 +8,7 @@
     align-content: flex-start;
 
     font-size: 0px;
+    min-width: 500px;
 }
 
 .ttt-board button {
