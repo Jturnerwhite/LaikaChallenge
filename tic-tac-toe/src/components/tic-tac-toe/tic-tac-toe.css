@@ -1,0 +1,17 @@
+
+.ttt-board {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    align-items: flex-start;
+    align-content: flex-start;
+
+    font-size: 0px;
+}
+
+.ttt-board button {
+    width: 33.3%;
+    display: inline-block;
+    height: 100px;
+}
