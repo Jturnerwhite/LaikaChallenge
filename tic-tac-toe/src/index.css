@@ -22,11 +22,10 @@ body {
 	color: white;
 }
 
-.start-btn {
+.standard-btn {
 	text-decoration: none;
 	display: inline-block;
 	width: auto;
-	height: 1.2em;
 
 	background-color: #843684;
 	padding: 0.2em 0.6em;
@@ -37,4 +36,6 @@ body {
 
 	border: 2px solid #460046;
 	border-radius: 10px;
+
+	cursor: pointer;
 }

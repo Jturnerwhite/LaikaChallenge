@@ -6,7 +6,7 @@ class LandingPage extends Component {
         return (
             <div className="landing-page">
                 <h1>Tic-Tac-Toe</h1>
-                <Link className="start-btn" to="/game">Start</Link>
+                <Link className="standard-btn" to="/game">Start</Link>
             </div>
         );
     }

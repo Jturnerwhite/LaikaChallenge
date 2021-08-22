@@ -38,10 +38,10 @@ class GamePage extends Component {
 
     componentDidMount() {
         let { id } = this.state;
-        // uncomment if you want to keep gamestate when the page is refreshed
-        // if(id === "") {
-        //     id = this.apiService.getGameId()
-        // }
+
+        if(id === "") {
+            id = this.apiService.getGameId();
+        }
 
         this.apiService
             .getGame(id)
@@ -74,31 +74,56 @@ class GamePage extends Component {
                     turn: result.turn,
                     tiles: result.tiles
                 });
-                if(result.outcome) {
-                    this.renderAlert(result.outcome);
-                }
             });
         }
     }
 
+    processWin = (outcome) => {
+        if(outcome == null) {
+            return null;
+        }
+
+        let message = "This game is a tie!";
+        if(outcome != "Tie") {
+            message = outcome + " won the game!";
+        }
+
+        // So, this is where my inexperience with React shows through.
+        // After an update to state occurs, I'm not sure how to "wait until all components are updated before noticing a state change and handle a win state"
+        // This is dirty code to at least let the visual side of things finish before altering the user.
+        setTimeout(() => {
+            this.renderAlert(message);
+        }, 100);
+    }
+
     renderAlert = (message) => {
-        alert(message); // so I can refactor quickly later
+        // Under normal circumstances I would never use alerts, but after all this work I had some issues importing toastr (my usual go-to)
+        // I think for now its "fine" if a little ugly.
+        alert(message);
+    }
+
+    restart = () => {
+        this.apiService
+            .getGame("")
+            .then((result) => {
+                this.setState({
+                    id: result.id,
+                    outcome: result.outcome,
+                    turn: result.turn,
+                    tiles: result.tiles
+                })
+            });
     }
 
     render() {
         const {outcome, tiles} = this.state;
-
-        console.log(tiles);
-
-        if(outcome !== null) {
-            let redirect = "/end?outcome="+outcome;
-            return (<Redirect to={redirect}/>);
-        }
+        this.processWin(outcome);
 
         return (
             <div className="game-page">
                 <h1>Game Page</h1>
-                <TicTacToe tiles={tiles} update={this.updateTile}/>
+                <TicTacToe outcome={outcome} tiles={tiles} update={this.updateTile}/>
+                <button className="standard-btn" onClick={this.restart}>Restart</button>
             </div>
         );
     }

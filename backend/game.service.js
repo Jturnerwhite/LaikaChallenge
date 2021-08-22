@@ -46,9 +46,6 @@ class GameService {
 
     executeAIturn = (gameState) => {
         // At this stage the turn has already been swapped over
-        console.log(gameState.turn + ": AI Turn...");
-        console.log("Current state:")
-        console.log(gameState);
 
         // just having some fun here
         let behavior = 2;//Math.floor(Math.random() * 3);
@@ -66,8 +63,6 @@ class GameService {
                 break;
         }
 
-        console.log("Turn taken, new state:")
-        console.log(gameState);
         return this.updateGame(gameState);
     }
 
