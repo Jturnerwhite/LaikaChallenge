@@ -46,7 +46,7 @@ app.post('/game/:id', (req, res) => {
 
 app.listen(9000, () => {
     console.log('Backend running on localhost:9000');
-    console.log('Running test...');
+    // console.log('Running test...');
     // let testService = new TestService();
     // testService.TestSimple();
     // console.log("----------------");

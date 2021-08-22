@@ -1,3 +1,5 @@
+const BoardState = require('./boardstate');
+const AiService = require('./ai.service');
 
 class GameService {
     createNewGame = () => {
@@ -21,78 +23,24 @@ class GameService {
 
     // Provided a game state, assess if there is a winner and who's turn is next
     updateGame = (newGameState) => {
-        const winValue = 3;
-        const { turn, tiles } = newGameState;
-        let outcome = null;
+        let boardState = new BoardState(newGameState.tiles);
+        let outcome = boardState.getOutcome();
 
-        let totalFilled = 0;
-        let downRightDiagValue = 0;
-        for(var y = 0; y < tiles.length; y++) {
-            let totalRowValue = 0;
-            let totalColValue = 0;
-
-            for(var x = 0; x < tiles[y].length; x++) {
-                // check for row-based wins by recording occurrences
-                if(tiles[y][x] === "X") {
-                    totalFilled++;
-                    totalRowValue++;
-                }
-                else if(tiles[y][x] === "O") {
-                    totalFilled++;
-                    totalRowValue--;
-                }
-
-                // Unintuitively, we can simultaneously check for column wins like this
-                if(tiles[x][y] === "X") {
-                    totalColValue++;
-                }
-                else if(tiles[x][y] === "O") {
-                    totalColValue--;
-                }
-
-                if(x === y) {
-                    if(tiles[x][y] === "X") {
-                        downRightDiagValue++;
-                    }
-                    else if(tiles[x][y] === "O") {
-                        downRightDiagValue--;
-                    }
-                }
-            }
-
-            if(totalRowValue === winValue || totalColValue === winValue) {
-                outcome = "X";
-            }
-            else if(totalRowValue === -winValue || totalColValue === -winValue) {
-                outcome = "O";
-            }
+        switch(outcome) {
+            case -1:
+                newGameState.outcome = "O";
+                break;
+            case 0:
+                newGameState.outcome = "Tie";
+                break;
+            case 1:
+                newGameState.outcome = "X";
+                break;
+            default:
+                newGameState.outcome = null;
         }
 
-        if(downRightDiagValue === winValue || downRightDiagValue === winValue) {
-            outcome = "X";
-        }
-        else if(downRightDiagValue === -winValue || downRightDiagValue === -winValue) {
-            outcome = "O";
-        }
-
-        // wanted to move on from this, couldn't think of rapid+easy+clever check so heres the 'hard coded'
-        if(tiles[0][2] === tiles[1][1] && tiles[1][1] === tiles[2][0] && tiles[1][1] === "X") {
-            outcome = "X";
-        }
-        if(tiles[0][2] === tiles[1][1] && tiles[1][1] === tiles[2][0] && tiles[1][1] === "O") {
-            outcome = "O";
-        }
-
-        if(!outcome && totalFilled === (tiles.length * tiles[0].length)) {
-            outcome = "TIE";
-        }
-
-        if(outcome) {
-            console.log("Win detected: " + outcome);
-        }
-        newGameState.outcome = outcome;
-        newGameState.turn = (turn === "X") ? "O" : "X";
-
+        newGameState.turn = (newGameState.turn === "X") ? "O" : "X";
         return newGameState;
     }
 
@@ -103,7 +51,7 @@ class GameService {
         console.log(gameState);
 
         // just having some fun here
-        let behavior = Math.floor(Math.random() * 3);
+        let behavior = 2;//Math.floor(Math.random() * 3);
 
         switch(behavior) {
             case 0:
@@ -114,7 +62,7 @@ class GameService {
                 break;
             case 2:
             default:
-                gameState = this.randomBehavior(gameState);
+                gameState = this.playToWin(gameState);
                 break;
         }
 
@@ -168,7 +116,11 @@ class GameService {
     }
 
     playToWin = (newGameState) => {
-        // In progress elsewhere
+        let aiPlayer = new AiService(newGameState.tiles);
+        let bestOption = aiPlayer.decideTurn();
+        newGameState.tiles[bestOption.coord.y][bestOption.coord.x] = newGameState.turn;
+
+        return newGameState;
     }
 }
 
