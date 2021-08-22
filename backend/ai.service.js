@@ -118,8 +118,10 @@ class AiService {
     compute = (boardState, turn, depth) => {
         let options = boardState.getEmpty();
 
-        if(options.length == 0) {
+        let outcome = boardState.getOutcome();
+        if(outcome != null) {
             let outcome = boardState.getOutcome();
+
             if(outcome > 0) {
                 outcome = 10 - depth;
             }
@@ -136,7 +138,7 @@ class AiService {
         let lowest = Number.POSITIVE_INFINITY;
         let highest = Number.NEGATIVE_INFINITY;
         let bestOption = null;
-        let nextTurn = turn == "X" ? "X" : "O";
+        let nextTurn = (turn == "X") ? "O" : "X";
 
         options.forEach((coord) => {
             let newState = this.nextState(boardState, turn, coord);
@@ -144,6 +146,7 @@ class AiService {
             // and the total value of the tree down
             // Think of it like "This action [x,y] yield ### points"
             let bestNextAction = this.compute(newState, nextTurn, depth + 1);
+            coord.value = bestNextAction.value;
 
             if(bestNextAction.value > highest) {
                 highest = bestNextAction.value;
@@ -161,6 +164,15 @@ class AiService {
                 }
             }
         });
+
+        // debug logging
+        // if(depth === 0) {
+        //     console.log("Top branch");
+        //     console.log("Options:");
+        //     console.log(options);
+        //     console.log("Best:");
+        //     console.log(bestOption);
+        // }
 
         return bestOption;
     }
