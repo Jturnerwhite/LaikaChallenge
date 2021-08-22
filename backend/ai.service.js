@@ -119,10 +119,18 @@ class AiService {
         let options = boardState.getEmpty();
 
         if(options.length == 0) {
-            // So if X won at depth 10, thats +10 score favorability, or -10 for O winning
-            // Technically this favors trees of possibility that favor games that run 'longer'
-            // And we don't have coordinates to provide at this depth
-            return { coord: null, value: (boardState.getOutcome() * depth) };
+            let outcome = boardState.getOutcome();
+            if(outcome > 0) {
+                outcome = 10 - depth;
+            }
+            else if(outcome < 0) {
+                outcome = depth - 10;
+            }
+
+            return {
+                coord: null,
+                value: outcome
+            };
         }
 
         let lowest = Number.POSITIVE_INFINITY;
