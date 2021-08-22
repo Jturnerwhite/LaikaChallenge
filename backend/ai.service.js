@@ -1,14 +1,11 @@
 class BoardState {
     tiles = [];
-    turn = "X";
 
     constructor(existing) {
         // deep copy
         this.tiles = existing.tiles.map((row) => {
             return Array.from(row);
         });
-
-        this.turn = existing.turn;
     }
 
     // array of { y, x } open coordinates
@@ -26,6 +23,7 @@ class BoardState {
         return coordinates;
     }
 
+    // +1 if X won, -1 if O won, 0 if tied, null if still open
     getOutcome = () => {
         let winner = null;
         let winValue = this.tiles.length;
@@ -104,11 +102,9 @@ class BoardState {
 
 class AiService {
     currentState = new BoardState();
-    currentlyRunning = false;
 
     constructor(tiles) {
-        this.currentState = new BoardState(tiles, "O");
-        this.currentlyRunning = false;
+        this.currentState = new BoardState(tiles);
     }
 
     decideTurn = () => {
@@ -134,17 +130,35 @@ class AiService {
     // 0 = Neutral
     // -1 = O's favor
     compute = (boardState, turn, depth) => {
-        // Since AI is O, we want the "lowest" score
         let lowest = Number.POSITIVE_INFINITY;
-        let options = this.currentState.getEmpty();
-        let bestOption = null;
+        let highest = Number.NEGATIVE_INFINITY;
+        let options = boardState.getEmpty();
 
+        if(options.length == 0) {
+            // So if X won at depth 10, thats +10 score favorability, or -10 for O winning
+            // Technically this favors trees of possibility that favor games that run 'longer'
+            return boardState.getOutcome() * depth;
+        }
+
+        let bestOption = null;
         options.forEach((coord) => {
-            let newState = this.nextState(this.currentState, "O", coord);
-            let valueOfOption = this.compute(newState, "O", 0);
+            let newState = this.nextState(boardState, "O", coord);
+            let valueOfOption = this.compute(newState, "O", depth + 1);
+
+            if(valueOfOption > highest) {
+                highest = valueOfOption;
+
+                if(turn == "X") {
+                    bestOption = coord;
+                }
+            }
+
             if(valueOfOption < lowest) {
                 lowest = valueOfOption;
-                bestOption = coord;
+
+                if(turn == "O") {
+                    bestOption = coord;
+                }
             }
         });
     }
