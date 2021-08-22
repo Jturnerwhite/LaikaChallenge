@@ -1,9 +1,9 @@
 class BoardState {
     tiles = [];
 
-    constructor(existing) {
+    constructor(tiles) {
         // deep copy
-        this.tiles = existing.tiles.map((row) => {
+        this.tiles = tiles.map((row) => {
             return Array.from(row);
         });
     }
@@ -32,43 +32,43 @@ class BoardState {
         let totalFilled = 0;
         let downRightDiagValue = 0;
         let downLeftDiagValue = 0;
-        for(var y = 0; y < tiles.length; y++) {
+        for(var y = 0; y < this.tiles.length; y++) {
             let totalRowValue = 0;
             let totalColValue = 0;
 
-            for(var x = 0; x < tiles[y].length; x++) {
+            for(var x = 0; x < this.tiles[y].length; x++) {
                 // check for row-based wins by recording occurrences
-                if(tiles[y][x] === "X") {
+                if(this.tiles[y][x] === "X") {
                     totalFilled++;
                     totalRowValue++;
                 }
-                else if(tiles[y][x] === "O") {
+                else if(this.tiles[y][x] === "O") {
                     totalFilled++;
                     totalRowValue--;
                 }
 
                 // Unintuitively, we can simultaneously check for column wins like this
-                if(tiles[x][y] === "X") {
+                if(this.tiles[x][y] === "X") {
                     totalColValue++;
                 }
-                else if(tiles[x][y] === "O") {
+                else if(this.tiles[x][y] === "O") {
                     totalColValue--;
                 }
 
                 if(x === y) {
-                    if(tiles[y][x] === "X") {
+                    if(this.tiles[y][x] === "X") {
                         downRightDiagValue++;
                     }
-                    else if(tiles[y][x] === "O") {
+                    else if(this.tiles[y][x] === "O") {
                         downRightDiagValue--;
                     }
                 }
 
-                if((x + y) == tiles.length) {
-                    if(tiles[y][x] === "X") {
+                if((x + y) == this.tiles.length) {
+                    if(this.tiles[y][x] === "X") {
                         downLeftDiagValue++;
                     }
-                    else if(tiles[y][x] === "O") {
+                    else if(this.tiles[y][x] === "O") {
                         downLeftDiagValue--;
                     }
                 }
@@ -92,7 +92,7 @@ class BoardState {
         if(winner) {
             return (winner == "X") ? 1 : -1;
         }
-        if(!winner && totalFilled === (tiles.length * tiles[0].length)) {
+        if(!winner && totalFilled === (this.tiles.length * this.tiles[0].length)) {
             return 0;
         }
 
@@ -101,71 +101,65 @@ class BoardState {
 }
 
 class AiService {
-    currentState = new BoardState();
+    currentState = null;
 
     constructor(tiles) {
         this.currentState = new BoardState(tiles);
     }
 
     decideTurn = () => {
-        // Since AI is O, we want the "lowest" score
+        return this.compute(this.currentState, "O", 0);
+    }
+
+    // Returns: { coords: { x, y }, value: # } The value and option chosen is based on how favorable the tree of actions is
+    // +1 = X's favor
+    // 0 = Neutral
+    // -1 = O's favor
+    compute = (boardState, turn, depth) => {
+        let options = boardState.getEmpty();
+
+        if(options.length == 0) {
+            // So if X won at depth 10, thats +10 score favorability, or -10 for O winning
+            // Technically this favors trees of possibility that favor games that run 'longer'
+            // And we don't have coordinates to provide at this depth
+            return { coord: null, value: (boardState.getOutcome() * depth) };
+        }
+
         let lowest = Number.POSITIVE_INFINITY;
-        let options = this.currentState.getEmpty();
+        let highest = Number.NEGATIVE_INFINITY;
         let bestOption = null;
+        let nextTurn = turn == "X" ? "X" : "O";
 
         options.forEach((coord) => {
-            let newState = this.nextState(this.currentState, "O", coord);
-            let valueOfOption = this.compute(newState, "O", 0);
-            if(valueOfOption < lowest) {
-                lowest = valueOfOption;
-                bestOption = coord;
+            let newState = this.nextState(boardState, turn, coord);
+            // with the next state based off this option, get what the next action would be after
+            // and the total value of the tree down
+            // Think of it like "This action [x,y] yield ### points"
+            let bestNextAction = this.compute(newState, nextTurn, depth + 1);
+
+            if(bestNextAction.value > highest) {
+                highest = bestNextAction.value;
+
+                if(turn == "X") {
+                    bestOption = { coord: coord, value: bestNextAction.value };
+                }
+            }
+
+            if(bestNextAction.value < lowest) {
+                lowest = bestNextAction.value;
+
+                if(turn == "O") {
+                    bestOption = { coord: coord, value: bestNextAction.value };
+                }
             }
         });
 
         return bestOption;
     }
 
-    // Returns a value based on how favorable the tree of actions is
-    // +1 = X's favor
-    // 0 = Neutral
-    // -1 = O's favor
-    compute = (boardState, turn, depth) => {
-        let lowest = Number.POSITIVE_INFINITY;
-        let highest = Number.NEGATIVE_INFINITY;
-        let options = boardState.getEmpty();
-
-        if(options.length == 0) {
-            // So if X won at depth 10, thats +10 score favorability, or -10 for O winning
-            // Technically this favors trees of possibility that favor games that run 'longer'
-            return boardState.getOutcome() * depth;
-        }
-
-        let bestOption = null;
-        options.forEach((coord) => {
-            let newState = this.nextState(boardState, "O", coord);
-            let valueOfOption = this.compute(newState, "O", depth + 1);
-
-            if(valueOfOption > highest) {
-                highest = valueOfOption;
-
-                if(turn == "X") {
-                    bestOption = coord;
-                }
-            }
-
-            if(valueOfOption < lowest) {
-                lowest = valueOfOption;
-
-                if(turn == "O") {
-                    bestOption = coord;
-                }
-            }
-        });
-    }
-
     // make a boardstate wherein the user executed their turn at the given index
-    nextState = (tiles, turn, coord) => {
-        let newState = new BoardState(tiles, turn);
+    nextState = (currentState, turn, coord) => {
+        let newState = new BoardState(currentState.tiles);
         newState.tiles[coord.y][coord.x] = turn;
         return newState;
     }
