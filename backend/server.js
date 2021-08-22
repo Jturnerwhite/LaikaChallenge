@@ -48,4 +48,6 @@ app.listen(9000, () => {
     console.log('Running test...');
     let testService = new TestService();
     testService.TestSimple();
+    testService.TestEasy();
+    testService.TestMedium();
 });
