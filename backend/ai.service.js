@@ -3,22 +3,102 @@ class BoardState {
     turn = "X";
 
     constructor(existing) {
-        this.tiles = Array.from(existing.tiles);
+        // deep copy
+        this.tiles = existing.tiles.map((row) => {
+            return Array.from(row);
+        });
+
         this.turn = existing.turn;
     }
 
-    // Get an array of indexes of the tileset which are empty
+    // array of { y, x } open coordinates
     getEmpty = () => {
-        return this.tiles.reduce((accu, currentValue, index) => {
-            if(currentValue === "") {
-                accu.push(index);
-            }
-            return accu;
-        }, []);
+        let coordinates = [];
+
+        this.tiles.forEach((row, yIndex) => {
+            row.forEach((value, xIndex) => {
+                if(value === "") {
+                    coordinates.push({ y: yIndex, x: xIndex });
+                }
+            });
+        });
+
+        return coordinates;
     }
 
     getOutcome = () => {
-        
+        let winner = null;
+        let winValue = this.tiles.length;
+
+        // Admittedly this is a lot more convoluted than just doing new iterations
+        let totalFilled = 0;
+        let downRightDiagValue = 0;
+        let downLeftDiagValue = 0;
+        for(var y = 0; y < tiles.length; y++) {
+            let totalRowValue = 0;
+            let totalColValue = 0;
+
+            for(var x = 0; x < tiles[y].length; x++) {
+                // check for row-based wins by recording occurrences
+                if(tiles[y][x] === "X") {
+                    totalFilled++;
+                    totalRowValue++;
+                }
+                else if(tiles[y][x] === "O") {
+                    totalFilled++;
+                    totalRowValue--;
+                }
+
+                // Unintuitively, we can simultaneously check for column wins like this
+                if(tiles[x][y] === "X") {
+                    totalColValue++;
+                }
+                else if(tiles[x][y] === "O") {
+                    totalColValue--;
+                }
+
+                if(x === y) {
+                    if(tiles[y][x] === "X") {
+                        downRightDiagValue++;
+                    }
+                    else if(tiles[y][x] === "O") {
+                        downRightDiagValue--;
+                    }
+                }
+
+                if((x + y) == tiles.length) {
+                    if(tiles[y][x] === "X") {
+                        downLeftDiagValue++;
+                    }
+                    else if(tiles[y][x] === "O") {
+                        downLeftDiagValue--;
+                    }
+                }
+            }
+
+            if(totalRowValue === winValue || totalColValue === winValue) {
+                winner = "X";
+            }
+            else if(totalRowValue === -winValue || totalColValue === -winValue) {
+                winner = "O";
+            }
+        }
+
+        if(downRightDiagValue === winValue || downLeftDiagValue === winValue) {
+            winner = "X";
+        }
+        else if(downRightDiagValue === -winValue || downLeftDiagValue === -winValue) {
+            winner = "O";
+        }
+
+        if(winner) {
+            return (winner == "X") ? 1 : -1;
+        }
+        if(!winner && totalFilled === (tiles.length * tiles[0].length)) {
+            return 0;
+        }
+
+        return null;
     }
 }
 
@@ -27,49 +107,52 @@ class AiService {
     currentlyRunning = false;
 
     constructor(tiles) {
-        currentState = new BoardState(tiles, "O");
+        this.currentState = new BoardState(tiles, "O");
         this.currentlyRunning = false;
-
-        // enough fun, lets parse this to something simple
-        // ["X", "O", "", "","","", "","",""] style
-        tiles.forEach((row) => {
-            row.forEach(entry => {
-                this.tiles.push(entry);
-            });
-        })
     }
 
-    // Get an array of indexes of the tileset which are empty
-    getEmpty = (tiles) => {
-        return tiles.reduce((accu, currentValue, index) => {
-            if(currentValue === "") {
-                accu.push(index);
+    decideTurn = () => {
+        // Since AI is O, we want the "lowest" score
+        let lowest = Number.POSITIVE_INFINITY;
+        let options = this.currentState.getEmpty();
+        let bestOption = null;
+
+        options.forEach((coord) => {
+            let newState = this.nextState(this.currentState, "O", coord);
+            let valueOfOption = this.compute(newState, "O", 0);
+            if(valueOfOption < lowest) {
+                lowest = valueOfOption;
+                bestOption = coord;
             }
-            return accu;
-        }, []);
+        });
+
+        return bestOption;
     }
 
+    // Returns a value based on how favorable the tree of actions is
+    // +1 = X's favor
+    // 0 = Neutral
+    // -1 = O's favor
     compute = (boardState, turn, depth) => {
-        let emptyTiles = this.getEmpty(tiles);
+        // Since AI is O, we want the "lowest" score
+        let lowest = Number.POSITIVE_INFINITY;
+        let options = this.currentState.getEmpty();
+        let bestOption = null;
 
-        // end of the line
-        if(emptyTiles.length === 0) {
-            return 0;
-        }
-
-        let next = emptyTiles.map((pos) => {
-            // what does it look like if this action was taken?
-            let newState = predictTurn(boardState, turn, pos);
-
-            // Whats the result of taking this action?
-            return compute(newState);
+        options.forEach((coord) => {
+            let newState = this.nextState(this.currentState, "O", coord);
+            let valueOfOption = this.compute(newState, "O", 0);
+            if(valueOfOption < lowest) {
+                lowest = valueOfOption;
+                bestOption = coord;
+            }
         });
     }
 
     // make a boardstate wherein the user executed their turn at the given index
-    predictTurn = (tiles, turn, index) => {
+    nextState = (tiles, turn, coord) => {
         let newState = new BoardState(tiles, turn);
-        newState.tiles[index] = turn;
+        newState.tiles[coord.y][coord.x] = turn;
         return newState;
     }
 }
